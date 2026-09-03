@@ -1,0 +1,32 @@
+name: Windows CI
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  windows-smoke:
+    runs-on: windows-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Windows environment info
+        shell: pwsh
+        run: |
+          Write-Host "OS: $env:OS"
+          Write-Host "PSVersion: $($PSVersionTable.PSVersion)"
+          Write-Host "CWD: $(Get-Location)"
+
+      - name: Set up .NET 10
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.0.x'
+
+      - name: Verify .NET SDK
+        shell: pwsh
+        run: dotnet --version
+
+      - name: Verify CMake
+        shell: pwsh
+        run: cmake --version
