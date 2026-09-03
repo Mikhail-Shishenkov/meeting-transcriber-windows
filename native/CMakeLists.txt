@@ -25,6 +25,7 @@ add_library(pmtwhisper SHARED
     bridge/PolinWhisperBridge.cpp
 )
 target_link_libraries(pmtwhisper PRIVATE whisper)
+target_compile_features(pmtwhisper PRIVATE cxx_std_17)
 target_compile_definitions(pmtwhisper PRIVATE POLIN_WHISPER_RUNTIME_ENABLED=1)
 
 # Deterministic runtime output location for every generator/config:
