@@ -131,3 +131,18 @@ jobs:
               throw "EXTRA unexpected exports: $($extra -join ', ')"
           }
           Write-Host "Full DLL export set exactly matches the expected 10 pmt_whisper_* names"
+
+      - name: Build managed interop library + smoke
+        shell: pwsh
+        working-directory: managed
+        run: |
+          dotnet build PolinMegatranscriber.NativeSmoke/PolinMegatranscriber.NativeSmoke.csproj -c Release
+
+      - name: Run managed P/Invoke smoke against built DLL
+        shell: pwsh
+        # Prepend the already built native output directory to PATH so the
+        # loader can resolve pmtwhisper.dll. No copy, no rebuild.
+        working-directory: managed
+        run: |
+          $env:PATH = (Join-Path $env:GITHUB_WORKSPACE 'native/build/bin') + ';' + $env:PATH
+          dotnet run --project PolinMegatranscriber.NativeSmoke/PolinMegatranscriber.NativeSmoke.csproj -c Release --no-build
