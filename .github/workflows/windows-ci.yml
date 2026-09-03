@@ -86,7 +86,7 @@ jobs:
               throw "Microsoft.VCToolsVersion.default.txt not found at $vctoolsVersionFile"
           }
           $vctoolsVersion = (Get-Content -LiteralPath $vctoolsVersionFile -Raw).Trim()
-          if ($vctoolsVersion -notmatch '^\d+\.\d+\.\d+\.') {
+          if ($vctoolsVersion -notmatch '^\d+\.\d+\.\d+$') {
               throw "Unexpected VCTools version string: '$vctoolsVersion'"
           }
           $dumpbin = Join-Path $vsRoot "VC\Tools\MSVC\$vctoolsVersion\bin\Hostx64\x64\dumpbin.exe"
