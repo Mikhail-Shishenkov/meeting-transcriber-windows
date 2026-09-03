@@ -30,3 +30,101 @@ jobs:
       - name: Verify CMake
         shell: pwsh
         run: cmake --version
+
+      # No separate MSVC probe: a successful Visual Studio CMake build below
+      # is sufficient proof that the MSVC toolchain works.
+
+      - name: Configure native build (CMake, Visual Studio generator)
+        shell: pwsh
+        working-directory: native
+        run: |
+          cmake -S . -B build -A x64
+
+      - name: Build native DLL
+        shell: pwsh
+        working-directory: native
+        run: |
+          cmake --build build --config Release --parallel
+
+      - name: Verify pmtwhisper.dll exists
+        shell: pwsh
+        working-directory: native
+        run: |
+          $dll = Join-Path $PWD 'build/bin/pmtwhisper.dll'
+          if (-not (Test-Path -LiteralPath $dll)) {
+              throw "pmtwhisper.dll not found under build/bin/"
+          }
+          Get-Item -LiteralPath $dll | Format-Table Name, Length
+
+      - name: Verify pmtwhisper.dll exports
+        shell: pwsh
+        working-directory: native
+        run: |
+          $ErrorActionPreference = 'Stop'
+
+          $dll = Join-Path $PWD 'build/bin/pmtwhisper.dll'
+          if (-not (Test-Path -LiteralPath $dll)) {
+              throw "pmtwhisper.dll not found under build/bin/"
+          }
+
+          # Locate the installed Visual Studio instance and its x64 dumpbin
+          # (the plain PowerShell PATH does not include the MSVC toolchain).
+          $vswhere = Join-Path ${env:ProgramFiles(x86)} 'Microsoft Visual Studio\Installer\vswhere.exe'
+          if (-not (Test-Path -LiteralPath $vswhere)) {
+              throw "vswhere.exe not found at $vswhere"
+          }
+          $vsRoot = & $vswhere -latest -products '*' `              -requires Microsoft.VisualStudio.Component.VC.Tools.x86.x64 `
+              -property installationPath
+          if (-not $vsRoot) { throw "vswhere did not report a Visual Studio installation with the VC++ x64 tools component" }
+          $vsRoot = $vsRoot | Select-Object -First 1
+          Write-Host "Visual Studio found: $vsRoot"
+
+          # Resolve the VC tools version for this VS install and construct
+          # the deterministic dumpbin.exe path.
+          $vctoolsVersionFile = Join-Path $vsRoot 'VC\Auxiliary\Build\Microsoft.VCToolsVersion.default.txt'
+          if (-not (Test-Path -LiteralPath $vctoolsVersionFile)) {
+              throw "Microsoft.VCToolsVersion.default.txt not found at $vctoolsVersionFile"
+          }
+          $vctoolsVersion = (Get-Content -LiteralPath $vctoolsVersionFile -Raw).Trim()
+          if ($vctoolsVersion -notmatch '^\d+\.\d+\.\d+\.') {
+              throw "Unexpected VCTools version string: '$vctoolsVersion'"
+          }
+          $dumpbin = Join-Path $vsRoot "VC\Tools\MSVC\$vctoolsVersion\bin\Hostx64\x64\dumpbin.exe"
+          if (-not (Test-Path -LiteralPath $dumpbin)) {
+              throw "dumpbin.exe not found at $dumpbin"
+          }
+          Write-Host "Using dumpbin: $dumpbin"
+
+          # dumpbin /exports columns: ordinal, hint, RVA, name (last token).
+          $lines = & $dumpbin /exports $dll 2>&1
+          $exportNames = foreach ($ln in $lines) {
+              if ($ln -match '^\s*[0-9]+\s+[0-9A-Fa-f]+\s+[0-9A-Fa-f]+\s+(\S+)\s*$') {
+                  $Matches[1]
+              }
+          } | Sort-Object -Unique
+
+          $expected = @(
+              'pmt_whisper_runtime_available',
+              'pmt_whisper_session_create',
+              'pmt_whisper_session_destroy',
+              'pmt_whisper_session_detected_language',
+              'pmt_whisper_session_request_cancel',
+              'pmt_whisper_session_segment_count',
+              'pmt_whisper_session_segment_end_milliseconds',
+              'pmt_whisper_session_segment_start_milliseconds',
+              'pmt_whisper_session_segment_text',
+              'pmt_whisper_session_transcribe_wav'
+          ) | Sort-Object
+
+          Write-Host "DLL export count: $($exportNames.Count)"
+
+          # The complete DLL export set must be exactly the expected 10 pmt_whisper_* names.
+          $missing = $expected | Where-Object { $_ -notin $exportNames }
+          $extra = $exportNames | Where-Object { $_ -notin $expected }
+          if ($missing.Count -gt 0) {
+              throw "MISSING expected exports: $($missing -join ', ')"
+          }
+          if ($extra.Count -gt 0) {
+              throw "EXTRA unexpected exports: $($extra -join ', ')"
+          }
+          Write-Host "Full DLL export set exactly matches the expected 10 pmt_whisper_* names"
