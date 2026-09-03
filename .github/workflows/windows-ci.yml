@@ -97,11 +97,14 @@ jobs:
 
           # dumpbin /exports columns: ordinal, hint, RVA, name (last token).
           $lines = & $dumpbin /exports $dll 2>&1
-          $exportNames = foreach ($ln in $lines) {
-              if ($ln -match '^\s*[0-9]+\s+[0-9A-Fa-f]+\s+[0-9A-Fa-f]+\s+(\S+)\s*$') {
-                  $Matches[1]
+          $exportNames = @(
+              foreach ($ln in $lines) {
+                  if ($ln -match '^\s*[0-9]+\s+[0-9A-Fa-f]+\s+[0-9A-Fa-f]+\s+(\S+)\s*$') {
+                      $Matches[1]
+                  }
               }
-          } | Sort-Object -Unique
+          )
+          $exportNames = $exportNames | Sort-Object -Unique
 
           $expected = @(
               'pmt_whisper_runtime_available',
