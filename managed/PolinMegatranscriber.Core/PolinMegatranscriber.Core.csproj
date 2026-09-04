@@ -10,4 +10,9 @@
     <ProjectReference Include="..\PolinMegatranscriber.Native\PolinMegatranscriber.Native.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <EmbeddedResource Include="Resources\whisper-models.json"
+                      LogicalName="PolinMegatranscriber.Core.whisper-models.json" />
+  </ItemGroup>
+
 </Project>

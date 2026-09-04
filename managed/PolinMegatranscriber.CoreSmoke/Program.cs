@@ -30,6 +30,7 @@ internal static partial class CoreSmoke
         await VerifyProcessRunnerContractAsync();
         await VerifyMediaServiceContractsAsync();
         await VerifyProcessingContractsAsync();
+        await VerifyModelContractsAsync();
 
         if (arguments.Length > 0)
         {
@@ -41,6 +42,10 @@ internal static partial class CoreSmoke
             {
                 await RunRealProcessingAsync(
                     ParseProcessingArguments(arguments));
+            }
+            else if (arguments[0] == "--model-smoke")
+            {
+                await RunRealModelAsync(ParseModelArguments(arguments));
             }
             else
             {
