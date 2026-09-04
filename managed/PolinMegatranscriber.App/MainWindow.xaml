@@ -348,11 +348,29 @@
                 </Border>
 
                 <Border Style="{StaticResource SectionCard}" Margin="0,0,0,14"
+                        Background="{DynamicResource SelectedBrush}"
                         BorderBrush="{DynamicResource ForestBrush}"
                         Visibility="{Binding ShowSuccess, Converter={StaticResource BoolToVisibility}}">
                     <StackPanel>
-                        <TextBlock Text="Готово" FontFamily="Georgia" FontSize="23" FontWeight="Bold"
-                                   Foreground="{DynamicResource ForestBrush}" />
+                        <StackPanel Orientation="Horizontal">
+                            <Border Width="24" Height="24"
+                                    CornerRadius="12"
+                                    Background="{DynamicResource ForestBrush}"
+                                    VerticalAlignment="Center">
+                                <TextBlock Text="✓"
+                                           Foreground="White"
+                                           FontWeight="Bold"
+                                           FontSize="14"
+                                           HorizontalAlignment="Center"
+                                           VerticalAlignment="Center" />
+                            </Border>
+                            <TextBlock Text="Готово"
+                                       Margin="9,0,0,0"
+                                       FontSize="18"
+                                       FontWeight="SemiBold"
+                                       Foreground="{DynamicResource ForestBrush}"
+                                       VerticalAlignment="Center" />
+                        </StackPanel>
                         <ItemsControl ItemsSource="{Binding OutputFileNames}" Margin="0,8,0,10">
                             <ItemsControl.ItemTemplate>
                                 <DataTemplate>
@@ -360,14 +378,42 @@
                                 </DataTemplate>
                             </ItemsControl.ItemTemplate>
                         </ItemsControl>
-                        <WrapPanel Margin="-3">
-                            <Button Margin="3" Content="Показать в Проводнике" Click="RevealResult_Click" />
-                            <Button Margin="3" Content="Открыть папку с результатами" Click="OpenResultsFolder_Click" />
-                            <Button Margin="3" Content="Открыть текст" Click="OpenText_Click"
+                        <Grid Margin="0,2,0,2">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="*" />
+                            </Grid.ColumnDefinitions>
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto" />
+                                <RowDefinition Height="Auto" />
+                            </Grid.RowDefinitions>
+
+                            <Button Grid.Row="0" Grid.Column="0"
+                                    Margin="0,0,5,8"
+                                    MinHeight="42"
+                                    Content="Показать в Проводнике"
+                                    Click="RevealResult_Click" />
+
+                            <Button Grid.Row="0" Grid.Column="1"
+                                    Margin="5,0,0,8"
+                                    MinHeight="42"
+                                    Content="Открыть папку с результатами"
+                                    Click="OpenResultsFolder_Click" />
+
+                            <Button Grid.Row="1" Grid.Column="0"
+                                    Margin="0,0,5,0"
+                                    MinHeight="42"
+                                    Content="Открыть текст"
+                                    Click="OpenText_Click"
                                     Visibility="{Binding HasTextOutput, Converter={StaticResource BoolToVisibility}}" />
-                            <Button Margin="3" Content="{Binding CopyTextLabel}" Click="CopyText_Click"
+
+                            <Button Grid.Row="1" Grid.Column="1"
+                                    Margin="5,0,0,0"
+                                    MinHeight="42"
+                                    Content="{Binding CopyTextLabel}"
+                                    Click="CopyText_Click"
                                     Visibility="{Binding HasTextOutput, Converter={StaticResource BoolToVisibility}}" />
-                        </WrapPanel>
+                        </Grid>
                     </StackPanel>
                 </Border>
 
@@ -378,7 +424,9 @@
                 <Button Content="{Binding CancelButtonText}" Style="{StaticResource ActionButton}"
                         Click="Cancel_Click" Margin="0,0,0,10"
                         Visibility="{Binding ShowCancelButton, Converter={StaticResource BoolToVisibility}}" />
-                <Button Content="Обработать другое видео" Click="AnotherFile_Click"
+                <Button Content="✦  Обработать другое видео"
+                        Style="{StaticResource ActionButton}"
+                        Click="AnotherFile_Click"
                         Margin="0,0,0,10"
                         Visibility="{Binding ShowSuccess, Converter={StaticResource BoolToVisibility}}" />
 
