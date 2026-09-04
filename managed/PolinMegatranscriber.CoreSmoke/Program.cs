@@ -29,12 +29,18 @@ internal static partial class CoreSmoke
         VerifyFFmpegProgressParser();
         await VerifyProcessRunnerContractAsync();
         await VerifyMediaServiceContractsAsync();
+        await VerifyProcessingContractsAsync();
 
         if (arguments.Length > 0)
         {
             if (arguments[0] == "--media-smoke")
             {
                 await RunRealMediaAsync(ParseMediaArguments(arguments));
+            }
+            else if (arguments[0] == "--processing-smoke")
+            {
+                await RunRealProcessingAsync(
+                    ParseProcessingArguments(arguments));
             }
             else
             {
