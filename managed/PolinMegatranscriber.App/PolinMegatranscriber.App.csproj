@@ -1,0 +1,26 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net10.0-windows</TargetFramework>
+    <UseWPF>true</UseWPF>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <PlatformTarget>x64</PlatformTarget>
+    <Platforms>x64</Platforms>
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+    <NativeBridgePath>$([System.IO.Path]::GetFullPath('$(MSBuildThisFileDirectory)..\..\native\build\bin\pmtwhisper.dll'))</NativeBridgePath>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\PolinMegatranscriber.Core\PolinMegatranscriber.Core.csproj" />
+    <None Include="$(NativeBridgePath)"
+          Link="pmtwhisper.dll"
+          CopyToOutputDirectory="PreserveNewest"
+          Condition="Exists('$(NativeBridgePath)')" />
+  </ItemGroup>
+
+  <Target Name="RequireNativeBridge" BeforeTargets="Build" Condition="'$(DesignTimeBuild)' != 'true'">
+    <Error Condition="!Exists('$(NativeBridgePath)')"
+           Text="pmtwhisper.dll не найден: $(NativeBridgePath). Сначала соберите native project: cmake --build native/build --config Release." />
+  </Target>
+</Project>

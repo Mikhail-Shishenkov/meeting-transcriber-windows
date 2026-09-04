@@ -1,0 +1,362 @@
+<Window x:Class="PolinMegatranscriber.App.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:local="clr-namespace:PolinMegatranscriber.App"
+        Title="Полин Мегатранскрибатор"
+        Width="760" Height="820"
+        MinWidth="540" MinHeight="520"
+        WindowStartupLocation="CenterScreen"
+        Background="{DynamicResource BackgroundBrush}"
+        AllowDrop="True"
+        Drop="Window_Drop"
+        DragOver="Window_DragOver"
+        Loaded="Window_Loaded">
+    <Window.Resources>
+        <local:InverseBooleanToVisibilityConverter x:Key="InverseBoolToVisibility" />
+        <Style x:Key="SectionCard" TargetType="Border">
+            <Setter Property="Background" Value="{DynamicResource SurfaceBrush}" />
+            <Setter Property="BorderBrush" Value="{DynamicResource BorderBrush}" />
+            <Setter Property="BorderThickness" Value="1" />
+            <Setter Property="CornerRadius" Value="14" />
+            <Setter Property="Padding" Value="13" />
+        </Style>
+        <Style x:Key="ChoiceCard" TargetType="RadioButton">
+            <Setter Property="Cursor" Value="Hand" />
+            <Setter Property="Margin" Value="3" />
+            <Setter Property="MinHeight" Value="92" />
+            <Setter Property="FocusVisualStyle" Value="{x:Null}" />
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="RadioButton">
+                        <Border x:Name="Card"
+                                Padding="12,10"
+                                CornerRadius="12"
+                                Background="{DynamicResource BackgroundBrush}"
+                                BorderBrush="{DynamicResource BorderBrush}"
+                                BorderThickness="1">
+                            <Grid>
+                                <ContentPresenter VerticalAlignment="Center" />
+                                <Border x:Name="Check"
+                                        HorizontalAlignment="Right"
+                                        VerticalAlignment="Top"
+                                        Width="22" Height="22"
+                                        CornerRadius="11"
+                                        Background="{DynamicResource ForestBrush}"
+                                        Visibility="Collapsed">
+                                    <TextBlock Text="✓" Foreground="White"
+                                               HorizontalAlignment="Center"
+                                               VerticalAlignment="Center"
+                                               FontWeight="Bold" />
+                                </Border>
+                            </Grid>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsChecked" Value="True">
+                                <Setter TargetName="Card" Property="Background" Value="{DynamicResource SelectedBrush}" />
+                                <Setter TargetName="Card" Property="BorderBrush" Value="{DynamicResource ForestBrush}" />
+                                <Setter TargetName="Card" Property="BorderThickness" Value="2" />
+                                <Setter TargetName="Check" Property="Visibility" Value="Visible" />
+                            </Trigger>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="Card" Property="BorderBrush" Value="{DynamicResource ForestBrush}" />
+                            </Trigger>
+                            <Trigger Property="IsKeyboardFocused" Value="True">
+                                <Setter TargetName="Card" Property="BorderBrush" Value="{DynamicResource ForestBrush}" />
+                                <Setter TargetName="Card" Property="BorderThickness" Value="2" />
+                            </Trigger>
+                            <Trigger Property="IsEnabled" Value="False">
+                                <Setter Property="Opacity" Value="0.55" />
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+        <Style x:Key="ActionButton" TargetType="Button" BasedOn="{StaticResource {x:Type Button}}">
+            <Setter Property="Background" Value="{DynamicResource ActionBrush}" />
+            <Setter Property="Foreground" Value="White" />
+            <Setter Property="BorderBrush" Value="{DynamicResource ActionBrush}" />
+            <Setter Property="FontWeight" Value="SemiBold" />
+            <Setter Property="MinHeight" Value="48" />
+        </Style>
+        <Style x:Key="SectionTitle" TargetType="TextBlock">
+            <Setter Property="FontSize" Value="15" />
+            <Setter Property="FontWeight" Value="SemiBold" />
+            <Setter Property="Foreground" Value="{DynamicResource ForestBrush}" />
+            <Setter Property="Margin" Value="0,0,0,9" />
+        </Style>
+        <Style x:Key="Muted" TargetType="TextBlock">
+            <Setter Property="Foreground" Value="{DynamicResource MutedTextBrush}" />
+            <Setter Property="FontSize" Value="12" />
+        </Style>
+    </Window.Resources>
+
+    <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
+        <Grid Margin="22" HorizontalAlignment="Center" MaxWidth="680">
+            <StackPanel>
+                <Grid Margin="0,0,0,14">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="Auto" />
+                    </Grid.ColumnDefinitions>
+                    <StackPanel Margin="0,0,16,0">
+                        <TextBlock Text="Полин Мегатранскрибатор"
+                                   FontFamily="Georgia"
+                                   FontSize="31"
+                                   FontWeight="Bold"
+                                   Foreground="{DynamicResource ForestBrush}" />
+                        <TextBlock Margin="0,5,0,0"
+                                   Text="Перетащите запись, выберите результат и запустите локальную обработку."
+                                   TextWrapping="Wrap"
+                                   Foreground="{DynamicResource MutedTextBrush}" />
+                    </StackPanel>
+                    <ComboBox Grid.Column="1" Width="116" Height="30"
+                              SelectedIndex="0"
+                              VerticalAlignment="Top"
+                              SelectionChanged="Appearance_SelectionChanged">
+                        <ComboBoxItem Content="Системная" Tag="System" />
+                        <ComboBoxItem Content="Светлая" Tag="Light" />
+                        <ComboBoxItem Content="Тёмная" Tag="Dark" />
+                    </ComboBox>
+                </Grid>
+
+                <StackPanel Visibility="{Binding IsCompact, Converter={StaticResource InverseBoolToVisibility}}">
+                    <Border MinHeight="170" Margin="0,0,0,14"
+                            Background="{DynamicResource SurfaceBrush}"
+                            CornerRadius="18">
+                        <Grid>
+                            <Rectangle Margin="1.5" RadiusX="18" RadiusY="18"
+                                       Stroke="{DynamicResource BorderBrush}"
+                                       StrokeThickness="1.2"
+                                       StrokeDashArray="7 5" />
+                            <StackPanel Margin="18,14" HorizontalAlignment="Center" VerticalAlignment="Center">
+                                <TextBlock Text="&#xE714;" FontFamily="Segoe MDL2 Assets"
+                                           FontSize="31" Foreground="{DynamicResource TerracottaBrush}"
+                                           HorizontalAlignment="Center" />
+                                <TextBlock FontSize="16" FontWeight="SemiBold" Margin="0,7,0,0"
+                                           HorizontalAlignment="Center" TextTrimming="CharacterEllipsis"
+                                           MaxWidth="590">
+                                    <TextBlock.Style>
+                                        <Style TargetType="TextBlock">
+                                            <Setter Property="Text" Value="{Binding FileName}" />
+                                            <Style.Triggers>
+                                                <DataTrigger Binding="{Binding FileName}" Value="Перетащите запись сюда">
+                                                    <Setter Property="Text" Value="Видео или аудио" />
+                                                </DataTrigger>
+                                            </Style.Triggers>
+                                        </Style>
+                                    </TextBlock.Style>
+                                </TextBlock>
+                                <TextBlock Margin="0,5,0,0"
+                                           HorizontalAlignment="Center" TextAlignment="Center" TextWrapping="Wrap">
+                                    <TextBlock.Style>
+                                        <Style TargetType="TextBlock" BasedOn="{StaticResource Muted}">
+                                            <Setter Property="Text" Value="{Binding FileDetails}" />
+                                            <Style.Triggers>
+                                                <DataTrigger Binding="{Binding FileName}" Value="Перетащите запись сюда">
+                                                    <Setter Property="Text" Value="WEBM, MP4, MOV, MP3, M4A, WAV и другие" />
+                                                </DataTrigger>
+                                            </Style.Triggers>
+                                        </Style>
+                                    </TextBlock.Style>
+                                </TextBlock>
+                                <Button Content="{Binding FileButtonText}" Margin="0,10,0,0"
+                                        IsEnabled="{Binding InputsEnabled}" Click="ChooseFile_Click" />
+                            </StackPanel>
+                        </Grid>
+                    </Border>
+
+                    <Border Style="{StaticResource SectionCard}" Margin="0,0,0,14">
+                        <StackPanel>
+                            <TextBlock Text="Что подготовить?" Style="{StaticResource SectionTitle}" />
+                            <UniformGrid Columns="3" Margin="-3" IsEnabled="{Binding InputsEnabled}">
+                                <RadioButton GroupName="Mode" Style="{StaticResource ChoiceCard}"
+                                             IsChecked="{Binding IsAudioOnly, Mode=TwoWay}">
+                                    <StackPanel>
+                                        <TextBlock Text="Только аудио" FontWeight="SemiBold" FontSize="14" />
+                                        <TextBlock Text="MP3" Margin="0,6,0,0" Style="{StaticResource Muted}" />
+                                    </StackPanel>
+                                </RadioButton>
+                                <RadioButton GroupName="Mode" Style="{StaticResource ChoiceCard}"
+                                             IsChecked="{Binding IsTextOnly, Mode=TwoWay}">
+                                    <StackPanel>
+                                        <TextBlock Text="Только текст" FontWeight="SemiBold" FontSize="14" />
+                                        <TextBlock Text="TXT + SRT" Margin="0,6,0,0" Style="{StaticResource Muted}" />
+                                    </StackPanel>
+                                </RadioButton>
+                                <RadioButton GroupName="Mode" Style="{StaticResource ChoiceCard}"
+                                             IsChecked="{Binding IsAudioAndText, Mode=TwoWay}">
+                                    <StackPanel>
+                                        <TextBlock Text="Аудио и текст" FontWeight="SemiBold" FontSize="14" TextWrapping="Wrap" />
+                                        <TextBlock Text="MP3 + TXT + SRT" Margin="0,6,0,0" Style="{StaticResource Muted}" TextWrapping="Wrap" />
+                                    </StackPanel>
+                                </RadioButton>
+                            </UniformGrid>
+                        </StackPanel>
+                    </Border>
+
+                    <Border Style="{StaticResource SectionCard}" Margin="0,0,0,14"
+                            Visibility="{Binding ShowsModelSelection, Converter={StaticResource BoolToVisibility}}">
+                        <StackPanel>
+                            <TextBlock Text="Модель распознавания" Style="{StaticResource SectionTitle}" />
+                            <UniformGrid Columns="2" Margin="-3" IsEnabled="{Binding InputsEnabled}">
+                            <RadioButton GroupName="Model" Style="{StaticResource ChoiceCard}"
+                                         IsChecked="{Binding IsSmall, Mode=TwoWay}">
+                                <StackPanel>
+                                    <StackPanel Orientation="Horizontal">
+                                        <TextBlock Text="Быстрее" FontWeight="SemiBold" FontSize="14" />
+                                        <TextBlock Text="Рекомендуется" Margin="8,1,0,0" FontSize="11"
+                                                   FontWeight="SemiBold" Foreground="{DynamicResource ForestBrush}" />
+                                    </StackPanel>
+                                    <TextBlock Text="Small · около 488 МБ" Margin="0,6,0,0" Style="{StaticResource Muted}" />
+                                    <TextBlock Text="{Binding SmallStatus}" Margin="0,4,0,0" FontSize="10"
+                                               Foreground="{DynamicResource MutedTextBrush}" TextWrapping="Wrap" />
+                                </StackPanel>
+                            </RadioButton>
+                            <RadioButton GroupName="Model" Style="{StaticResource ChoiceCard}"
+                                         IsChecked="{Binding IsMedium, Mode=TwoWay}">
+                                <StackPanel>
+                                    <TextBlock Text="Точнее" FontWeight="SemiBold" FontSize="14" />
+                                    <TextBlock Text="Medium · около 1,5 ГБ" Margin="0,6,0,0" Style="{StaticResource Muted}" />
+                                    <TextBlock Text="{Binding MediumStatus}" Margin="0,4,0,0" FontSize="10"
+                                               Foreground="{DynamicResource MutedTextBrush}" TextWrapping="Wrap" />
+                                </StackPanel>
+                            </RadioButton>
+                            </UniformGrid>
+                        </StackPanel>
+                    </Border>
+
+                    <Border Style="{StaticResource SectionCard}" Margin="0,0,0,14">
+                        <StackPanel>
+                            <TextBlock Text="Куда сохранить?" Style="{StaticResource SectionTitle}" />
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="Auto" />
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="Auto" />
+                                </Grid.ColumnDefinitions>
+                                <TextBlock Text="&#xE8B7;" FontFamily="Segoe MDL2 Assets" FontSize="21"
+                                           Foreground="{DynamicResource MustardBrush}" VerticalAlignment="Center" />
+                                <TextBlock Grid.Column="1" Margin="11,0" VerticalAlignment="Center"
+                                           TextTrimming="CharacterEllipsis" ToolTip="{Binding OutputDirectory}">
+                                    <TextBlock.Style>
+                                        <Style TargetType="TextBlock">
+                                            <Setter Property="Text" Value="{Binding OutputDirectory}" />
+                                            <Style.Triggers>
+                                                <DataTrigger Binding="{Binding OutputDirectory}" Value="Выберите файл">
+                                                    <Setter Property="Text" Value="Рядом с исходным файлом" />
+                                                </DataTrigger>
+                                            </Style.Triggers>
+                                        </Style>
+                                    </TextBlock.Style>
+                                </TextBlock>
+                                <Button Grid.Column="2" Content="Изменить…" Click="ChooseFolder_Click">
+                                    <Button.Style>
+                                        <Style TargetType="Button" BasedOn="{StaticResource {x:Type Button}}">
+                                            <Setter Property="IsEnabled" Value="True" />
+                                            <Style.Triggers>
+                                                <DataTrigger Binding="{Binding OutputDirectory}" Value="Выберите файл">
+                                                    <Setter Property="IsEnabled" Value="False" />
+                                                </DataTrigger>
+                                                <DataTrigger Binding="{Binding IsBusy}" Value="True">
+                                                    <Setter Property="IsEnabled" Value="False" />
+                                                </DataTrigger>
+                                            </Style.Triggers>
+                                        </Style>
+                                    </Button.Style>
+                                </Button>
+                            </Grid>
+                        </StackPanel>
+                    </Border>
+                </StackPanel>
+
+                <Border Style="{StaticResource SectionCard}" Margin="0,0,0,14"
+                        Visibility="{Binding IsCompact, Converter={StaticResource BoolToVisibility}}">
+                    <StackPanel>
+                        <TextBlock Text="Текущее задание" FontWeight="SemiBold" Foreground="{DynamicResource ForestBrush}" />
+                        <TextBlock Text="{Binding FileName}" Margin="0,8,0,0" FontWeight="SemiBold"
+                                   TextTrimming="CharacterEllipsis" />
+                        <TextBlock Text="{Binding SelectedModeTitle}" Margin="0,4,0,0" Style="{StaticResource Muted}" />
+                        <TextBlock Text="{Binding OutputDirectory}" Margin="0,4,0,0" Style="{StaticResource Muted}"
+                                   TextTrimming="CharacterEllipsis" />
+                    </StackPanel>
+                </Border>
+
+                <Border Style="{StaticResource SectionCard}" Margin="0,0,0,14"
+                        Visibility="{Binding ShowProgress, Converter={StaticResource BoolToVisibility}}">
+                    <StackPanel>
+                        <Grid>
+                            <TextBlock Text="{Binding StageText}" FontWeight="SemiBold" Margin="0,0,55,0" TextWrapping="Wrap" />
+                            <TextBlock Text="{Binding ProgressText}" HorizontalAlignment="Right"
+                                       Foreground="{DynamicResource ForestBrush}" FontWeight="SemiBold" />
+                        </Grid>
+                        <ProgressBar Height="9" Margin="0,12,0,0" Maximum="100"
+                                     Value="{Binding ProgressPercent, Mode=OneWay}" Foreground="{DynamicResource ForestBrush}" />
+                    </StackPanel>
+                </Border>
+
+                <Border Style="{StaticResource SectionCard}" Margin="0,0,0,14"
+                        BorderBrush="{DynamicResource MustardBrush}"
+                        Visibility="{Binding ShowCancelled, Converter={StaticResource BoolToVisibility}}">
+                    <StackPanel>
+                        <TextBlock Text="Обработка отменена" FontSize="17" FontWeight="SemiBold" />
+                        <TextBlock Text="{Binding StatusMessage}" Margin="0,5,0,0" Style="{StaticResource Muted}" />
+                    </StackPanel>
+                </Border>
+
+                <Border Style="{StaticResource SectionCard}" Margin="0,0,0,14"
+                        BorderBrush="{DynamicResource TerracottaBrush}"
+                        Visibility="{Binding ShowFailure, Converter={StaticResource BoolToVisibility}}">
+                    <StackPanel>
+                        <TextBlock Text="Не удалось завершить обработку" FontSize="17" FontWeight="SemiBold"
+                                   Foreground="{DynamicResource TerracottaBrush}" />
+                        <TextBlock Text="{Binding StatusMessage}" Margin="0,5,0,0" TextWrapping="Wrap" />
+                    </StackPanel>
+                </Border>
+
+                <Border Style="{StaticResource SectionCard}" Margin="0,0,0,14"
+                        BorderBrush="{DynamicResource ForestBrush}"
+                        Visibility="{Binding ShowSuccess, Converter={StaticResource BoolToVisibility}}">
+                    <StackPanel>
+                        <TextBlock Text="Готово" FontFamily="Georgia" FontSize="23" FontWeight="Bold"
+                                   Foreground="{DynamicResource ForestBrush}" />
+                        <ItemsControl ItemsSource="{Binding OutputFileNames}" Margin="0,8,0,10">
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate>
+                                    <TextBlock Text="{Binding StringFormat=✓  {0}}" Margin="0,2" />
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                        <WrapPanel Margin="-3">
+                            <Button Margin="3" Content="Показать в Проводнике" Click="RevealResult_Click" />
+                            <Button Margin="3" Content="Открыть папку с результатами" Click="OpenResultsFolder_Click" />
+                            <Button Margin="3" Content="Открыть текст" Click="OpenText_Click"
+                                    Visibility="{Binding HasTextOutput, Converter={StaticResource BoolToVisibility}}" />
+                            <Button Margin="3" Content="{Binding CopyTextLabel}" Click="CopyText_Click"
+                                    Visibility="{Binding HasTextOutput, Converter={StaticResource BoolToVisibility}}" />
+                        </WrapPanel>
+                    </StackPanel>
+                </Border>
+
+                <Button Content="✦  Начать обработку" Style="{StaticResource ActionButton}"
+                        IsEnabled="{Binding CanStart}" Click="Start_Click"
+                        Margin="0,0,0,10"
+                        Visibility="{Binding ShowStartButton, Converter={StaticResource BoolToVisibility}}" />
+                <Button Content="{Binding CancelButtonText}" Style="{StaticResource ActionButton}"
+                        Click="Cancel_Click" Margin="0,0,0,10"
+                        Visibility="{Binding ShowCancelButton, Converter={StaticResource BoolToVisibility}}" />
+                <Button Content="Обработать другое видео" Click="AnotherFile_Click"
+                        Margin="0,0,0,10"
+                        Visibility="{Binding ShowSuccess, Converter={StaticResource BoolToVisibility}}" />
+
+                <StackPanel Orientation="Horizontal" Margin="2,6,0,10" HorizontalAlignment="Left">
+                    <TextBlock Text="&#xEA18;" FontFamily="Segoe MDL2 Assets" FontSize="14"
+                               Foreground="{DynamicResource ForestBrush}" VerticalAlignment="Center" />
+                    <TextBlock Text="Запись остаётся на этом компьютере."
+                               Margin="7,0,0,0" VerticalAlignment="Center"
+                               Foreground="{DynamicResource MutedTextBrush}" FontSize="12" />
+                </StackPanel>
+            </StackPanel>
+        </Grid>
+    </ScrollViewer>
+</Window>

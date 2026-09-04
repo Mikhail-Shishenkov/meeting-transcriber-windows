@@ -1,0 +1,25 @@
+<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    <Color x:Key="BackgroundColor">#FF1A231C</Color>
+    <Color x:Key="SurfaceColor">#FF242E26</Color>
+    <Color x:Key="SurfaceRaisedColor">#FF303B32</Color>
+    <Color x:Key="ForestColor">#FF7FB080</Color>
+    <Color x:Key="TerracottaColor">#FFE88561</Color>
+    <Color x:Key="MustardColor">#FFF2B747</Color>
+    <Color x:Key="ActionColor">#FF9E452B</Color>
+    <Color x:Key="TextColor">#FFF4EEE4</Color>
+    <Color x:Key="MutedTextColor">#FFBFC8C0</Color>
+    <Color x:Key="BorderColor">#557FB080</Color>
+    <Color x:Key="SelectedColor">#337FB080</Color>
+    <SolidColorBrush x:Key="BackgroundBrush" Color="{StaticResource BackgroundColor}" />
+    <SolidColorBrush x:Key="SurfaceBrush" Color="{StaticResource SurfaceColor}" />
+    <SolidColorBrush x:Key="SurfaceRaisedBrush" Color="{StaticResource SurfaceRaisedColor}" />
+    <SolidColorBrush x:Key="ForestBrush" Color="{StaticResource ForestColor}" />
+    <SolidColorBrush x:Key="TerracottaBrush" Color="{StaticResource TerracottaColor}" />
+    <SolidColorBrush x:Key="MustardBrush" Color="{StaticResource MustardColor}" />
+    <SolidColorBrush x:Key="ActionBrush" Color="{StaticResource ActionColor}" />
+    <SolidColorBrush x:Key="TextBrush" Color="{StaticResource TextColor}" />
+    <SolidColorBrush x:Key="MutedTextBrush" Color="{StaticResource MutedTextColor}" />
+    <SolidColorBrush x:Key="BorderBrush" Color="{StaticResource BorderColor}" />
+    <SolidColorBrush x:Key="SelectedBrush" Color="{StaticResource SelectedColor}" />
+</ResourceDictionary>

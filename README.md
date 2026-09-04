@@ -13,15 +13,20 @@ Mac-версии. Финальная поставка — обычное Windows
 
 ## Текущий статус
 
-Собран и проверяется в Windows CI закреплённый CPU-only `whisper.cpp`,
-`pmtwhisper.dll` с точным набором из 10 экспортов и managed .NET-слой. Managed API
-уже владеет native session, транскрибирует WAV, читает UTF-8 сегменты,
-язык и timestamps, а также поддерживает progress и cancellation. WPF UI, ffmpeg,
-менеджер моделей и установщик ещё не реализованы.
-Над native-слоем есть UI-independent async Core-сервис с
-`CancellationToken`, монотонным progress, domain errors и защитой от
-параллельного inference. Unicode Windows paths с кириллицей и пробелами
-поддерживаются bridge-слоем и закреплены model-free regression-тестом.
+Собраны native bridge, managed Core и первый запускаемый WPF-клиент. Приложение
+поддерживает три продуктовых режима, асинхронную проверку медиа, Small/Medium
+модели, загрузку модели с progress, реальную отмену и публикацию MP3/TXT/SRT.
+Unicode Windows paths с кириллицей и пробелами поддерживаются всем pipeline.
+
+До bundled release FFmpeg ищется в `Runtime\MediaTools` рядом с приложением,
+в каталоге из `POLIN_MEGATRANSCRIBER_MEDIA_TOOLS`, в `PATH`, затем в локальном
+`C:\ffmpeg`. Установщик и поставка FFmpeg будут добавлены отдельным этапом.
+
+Release-версия после сборки запускается командой:
+
+```powershell
+& .\managed\PolinMegatranscriber.App\bin\Release\net10.0-windows\PolinMegatranscriber.App.exe
+```
 
 Spike-факты по Windows-окружению зафиксированы в [docs/SPIKE_RESULTS.md](docs/SPIKE_RESULTS.md),
 известные риски — в [docs/KNOWN_RISKS.md](docs/KNOWN_RISKS.md).

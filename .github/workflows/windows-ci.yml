@@ -145,6 +145,12 @@ jobs:
           dotnet build PolinMegatranscriber.NativeSmoke/PolinMegatranscriber.NativeSmoke.csproj -c Release
           dotnet build PolinMegatranscriber.CoreSmoke/PolinMegatranscriber.CoreSmoke.csproj -c Release
 
+      - name: Build WPF application (warnings as errors)
+        shell: pwsh
+        working-directory: managed
+        run: |
+          dotnet build PolinMegatranscriber.App/PolinMegatranscriber.App.csproj -c Release -p:TreatWarningsAsErrors=true
+
       - name: Run managed model-free interop smoke against built DLL
         shell: pwsh
         # Prepend the already built native output directory to PATH so the
