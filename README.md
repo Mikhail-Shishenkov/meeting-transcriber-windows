@@ -18,6 +18,10 @@ Mac-версии. Финальная поставка — обычное Windows
 уже владеет native session, транскрибирует WAV, читает UTF-8 сегменты,
 язык и timestamps, а также поддерживает progress и cancellation. WPF UI, ffmpeg,
 менеджер моделей и установщик ещё не реализованы.
+Над native-слоем есть UI-independent async Core-сервис с
+`CancellationToken`, монотонным progress, domain errors и защитой от
+параллельного inference. Unicode Windows paths с кириллицей и пробелами
+поддерживаются bridge-слоем и закреплены model-free regression-тестом.
 
 Spike-факты по Windows-окружению зафиксированы в [docs/SPIKE_RESULTS.md](docs/SPIKE_RESULTS.md),
 известные риски — в [docs/KNOWN_RISKS.md](docs/KNOWN_RISKS.md).

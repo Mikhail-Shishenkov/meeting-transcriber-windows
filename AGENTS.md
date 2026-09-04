@@ -27,5 +27,7 @@
 8. Продуктовая семантика progress / cancellation / timestamps / model handling не изменяется без отдельной задачи.
 9. macOS-репозиторий не копируется; он используется только как reference.
 10. Windows-specific поведение проверяется через CI на `windows-latest` и/или real Windows validation.
-11. Known non-ASCII path issue (WIN-RISK-001) — отдельный investigation/regression item; root cause не считать установленным.
+11. WIN-RISK-001 закрыт для PolinWhisperBridge и закреплён Unicode-path
+    regression-тестом; историческое поведение raw `whisper-cli` не
+    считать исправленным или частью application path.
 12. Cloud transcription, accounts, telemetry, auto-update и сложность installer не добавляются в MVP без отдельной задачи.

@@ -4,6 +4,7 @@
 #include <atomic>
 #include <cstdint>
 #include <cstring>
+#include <filesystem>
 #include <fstream>
 #include <limits>
 #include <memory>
@@ -175,7 +176,12 @@ bool read_exact(
 class PCM16Mono16kHzWavReader {
 public:
     explicit PCM16Mono16kHzWavReader(const char * path)
-        : stream_(path, std::ios::binary) {
+        : stream_(
+            path == nullptr
+                ? std::filesystem::path()
+                : std::filesystem::u8path(path),
+            std::ios::binary
+        ) {
         status_ = inspect();
     }
 

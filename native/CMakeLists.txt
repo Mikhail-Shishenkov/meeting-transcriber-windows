@@ -1,6 +1,8 @@
 cmake_minimum_required(VERSION 3.21)
 project(pmtwhisper-windows LANGUAGES CXX)
 
+include(CTest)
+
 # whisper.cpp is fetched at a fixed commit (pinned v1.9.1).
 # For the Windows MVP we want a self-contained pmtwhisper.dll, so the pinned
 # whisper.cpp dependency is built as CPU-only static libraries:
@@ -42,4 +44,32 @@ set_target_properties(pmtwhisper PROPERTIES
 # linker via /DEF. No per-symbol __declspec(dllexport) is required.
 if (WIN32)
     target_sources(pmtwhisper PRIVATE bridge/pmtwhisper.def)
+endif()
+
+# Model-free regression coverage for the bridge's UTF-8 C API on Windows.
+# The test compiles a private static copy of the bridge with test helpers;
+# pmtwhisper.dll and its exact 10-symbol production export surface are unchanged.
+if (WIN32 AND BUILD_TESTING)
+    add_library(pmtwhisper_bridge_testing STATIC
+        bridge/PolinWhisperBridge.cpp
+    )
+    target_link_libraries(pmtwhisper_bridge_testing PRIVATE whisper)
+    target_compile_features(pmtwhisper_bridge_testing PRIVATE cxx_std_17)
+    target_compile_definitions(pmtwhisper_bridge_testing PRIVATE
+        POLIN_WHISPER_RUNTIME_ENABLED=1
+        POLIN_WHISPER_BRIDGE_TESTING=1
+    )
+
+    add_executable(pmtwhisper_unicode_path_tests
+        tests/PolinWhisperBridgeUnicodePathTests.cpp
+    )
+    target_link_libraries(pmtwhisper_unicode_path_tests PRIVATE
+        pmtwhisper_bridge_testing
+        whisper
+    )
+    target_compile_features(pmtwhisper_unicode_path_tests PRIVATE cxx_std_17)
+    add_test(
+        NAME pmtwhisper_unicode_wav_path
+        COMMAND pmtwhisper_unicode_path_tests
+    )
 endif()

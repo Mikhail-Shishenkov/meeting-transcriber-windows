@@ -46,6 +46,12 @@ jobs:
         run: |
           cmake --build build --config Release --parallel
 
+      - name: Run native model-free regression tests
+        shell: pwsh
+        working-directory: native
+        run: |
+          ctest --test-dir build -C Release --output-on-failure
+
       - name: Verify pmtwhisper.dll exists
         shell: pwsh
         working-directory: native
@@ -137,6 +143,7 @@ jobs:
         working-directory: managed
         run: |
           dotnet build PolinMegatranscriber.NativeSmoke/PolinMegatranscriber.NativeSmoke.csproj -c Release
+          dotnet build PolinMegatranscriber.CoreSmoke/PolinMegatranscriber.CoreSmoke.csproj -c Release
 
       - name: Run managed model-free interop smoke against built DLL
         shell: pwsh
@@ -147,3 +154,10 @@ jobs:
         run: |
           $env:PATH = (Join-Path $env:GITHUB_WORKSPACE 'native/build/bin') + ';' + $env:PATH
           dotnet run --project PolinMegatranscriber.NativeSmoke/PolinMegatranscriber.NativeSmoke.csproj -c Release --no-build
+
+      - name: Run managed Core smoke
+        shell: pwsh
+        working-directory: managed
+        run: |
+          $env:PATH = (Join-Path $env:GITHUB_WORKSPACE 'native/build/bin') + ';' + $env:PATH
+          dotnet run --project PolinMegatranscriber.CoreSmoke/PolinMegatranscriber.CoreSmoke.csproj -c Release --no-build

@@ -36,8 +36,12 @@
 На `windows-latest` автоматизированы:
 
 - Windows build закреплённого whisper.cpp и bridge;
+- model-free regression открытия WAV по UTF-8 Windows path с кириллицей
+  и пробелами;
 - точный набор из 10 экспортов DLL;
 - сборка managed interop и smoke;
+- managed Core smoke для async orchestration, progress, cancellation,
+  concurrency, validation и domain error mapping;
 - runtime availability;
 - точные managed-значения статусов и native model-free контракт
   `ModelLoadFailed`.
