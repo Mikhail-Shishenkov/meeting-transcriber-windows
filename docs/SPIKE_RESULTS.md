@@ -31,14 +31,16 @@
 проверка модели, whisper-cli, компиляция bridge, native smoke, сборка DLL,
 проверка экспортов dumpbin) не могут быть воспроизведены агентом локально на macOS.
 
-## NOT YET AUTOMATED
+## CURRENT WINDOWS CI AUTOMATION
 
-Следующие проверки ещё не автоматизированы:
+На `windows-latest` автоматизированы:
 
-- Windows build whisper.cpp;
-- Windows build bridge;
-- проверка экспортов DLL;
-- C# P/Invoke smoke;
-- Windows regression checks.
+- Windows build закреплённого whisper.cpp и bridge;
+- точный набор из 10 экспортов DLL;
+- сборка managed interop и smoke;
+- runtime availability;
+- точные managed-значения статусов и native model-free контракт
+  `ModelLoadFailed`.
 
-CI ещё не существует.
+Реальная inference-проверка с большой моделью остаётся локальным/manual smoke и
+не скачивается в CI.

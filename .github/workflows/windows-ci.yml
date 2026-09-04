@@ -138,10 +138,11 @@ jobs:
         run: |
           dotnet build PolinMegatranscriber.NativeSmoke/PolinMegatranscriber.NativeSmoke.csproj -c Release
 
-      - name: Run managed P/Invoke smoke against built DLL
+      - name: Run managed model-free interop smoke against built DLL
         shell: pwsh
         # Prepend the already built native output directory to PATH so the
-        # loader can resolve pmtwhisper.dll. No copy, no rebuild.
+        # loader can resolve pmtwhisper.dll. This verifies runtime availability
+        # and the exact nonexistent-model failure contract without a large model.
         working-directory: managed
         run: |
           $env:PATH = (Join-Path $env:GITHUB_WORKSPACE 'native/build/bin') + ';' + $env:PATH
