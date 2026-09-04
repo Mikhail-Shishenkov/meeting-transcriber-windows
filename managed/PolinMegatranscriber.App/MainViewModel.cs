@@ -511,11 +511,26 @@ internal sealed class MainViewModel : INotifyPropertyChanged
 
     private static string FormatBytes(long bytes)
     {
-        const double mebibyte = 1024.0 * 1024.0;
+        const double kibibyte = 1024.0;
+        const double mebibyte = kibibyte * 1024.0;
         const double gibibyte = mebibyte * 1024.0;
-        return bytes >= gibibyte
-            ? $"{bytes / gibibyte:0.0} ГБ"
-            : $"{bytes / mebibyte:0.0} МБ";
+
+        if (bytes >= gibibyte)
+        {
+            return $"{bytes / gibibyte:0.0} ГБ";
+        }
+
+        if (bytes >= mebibyte)
+        {
+            return $"{bytes / mebibyte:0.0} МБ";
+        }
+
+        if (bytes >= kibibyte)
+        {
+            return $"{bytes / kibibyte:0.#} КБ";
+        }
+
+        return $"{bytes} Б";
     }
 
     private void RaiseFile()

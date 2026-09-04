@@ -2,11 +2,13 @@
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:local="clr-namespace:PolinMegatranscriber.App"
-        Title="Полин Мегатранскрибатор"
+        Title="Мегатранскрибатор"
         Width="760" Height="820"
         MinWidth="540" MinHeight="520"
         WindowStartupLocation="CenterScreen"
         Background="{DynamicResource BackgroundBrush}"
+        Icon="Assets/Megatranscriber-AppIcon.png"
+        Foreground="{DynamicResource TextBrush}"
         AllowDrop="True"
         Drop="Window_Drop"
         DragOver="Window_DragOver"
@@ -100,7 +102,7 @@
                         <ColumnDefinition Width="Auto" />
                     </Grid.ColumnDefinitions>
                     <StackPanel Margin="0,0,16,0">
-                        <TextBlock Text="Полин Мегатранскрибатор"
+                        <TextBlock Text="Мегатранскрибатор"
                                    FontFamily="Georgia"
                                    FontSize="31"
                                    FontWeight="Bold"
@@ -110,7 +112,7 @@
                                    TextWrapping="Wrap"
                                    Foreground="{DynamicResource MutedTextBrush}" />
                     </StackPanel>
-                    <ComboBox Grid.Column="1" Width="116" Height="30"
+                    <ComboBox Grid.Column="1" Width="116" Height="30" Style="{StaticResource ThemeComboBox}"
                               SelectedIndex="0"
                               VerticalAlignment="Top"
                               SelectionChanged="Appearance_SelectionChanged">
@@ -135,7 +137,8 @@
                                            HorizontalAlignment="Center" />
                                 <TextBlock FontSize="16" FontWeight="SemiBold" Margin="0,7,0,0"
                                            HorizontalAlignment="Center" TextTrimming="CharacterEllipsis"
-                                           MaxWidth="590">
+                                           MaxWidth="590"
+                                           Foreground="{DynamicResource TextBrush}">
                                     <TextBlock.Style>
                                         <Style TargetType="TextBlock">
                                             <Setter Property="Text" Value="{Binding FileName}" />
@@ -146,22 +149,55 @@
                                             </Style.Triggers>
                                         </Style>
                                     </TextBlock.Style>
-                                </TextBlock>
-                                <TextBlock Margin="0,5,0,0"
-                                           HorizontalAlignment="Center" TextAlignment="Center" TextWrapping="Wrap">
-                                    <TextBlock.Style>
-                                        <Style TargetType="TextBlock" BasedOn="{StaticResource Muted}">
-                                            <Setter Property="Text" Value="{Binding FileDetails}" />
-                                            <Style.Triggers>
-                                                <DataTrigger Binding="{Binding FileName}" Value="Перетащите запись сюда">
-                                                    <Setter Property="Text" Value="WEBM, MP4, MOV, MP3, M4A, WAV и другие" />
-                                                </DataTrigger>
-                                            </Style.Triggers>
-                                        </Style>
-                                    </TextBlock.Style>
-                                </TextBlock>
-                                <Button Content="{Binding FileButtonText}" Margin="0,10,0,0"
-                                        IsEnabled="{Binding InputsEnabled}" Click="ChooseFile_Click" />
+                                </TextBlock>                                <Grid Margin="0,5,0,0" HorizontalAlignment="Center">
+                                    <TextBlock Text="WEBM, MP4, MOV, MP3, M4A, WAV и другие"
+                                               HorizontalAlignment="Center">
+                                        <TextBlock.Style>
+                                            <Style TargetType="TextBlock" BasedOn="{StaticResource Muted}">
+                                                <Setter Property="Visibility" Value="Collapsed" />
+                                                <Style.Triggers>
+                                                    <DataTrigger Binding="{Binding FileName}" Value="Перетащите запись сюда">
+                                                        <Setter Property="Visibility" Value="Visible" />
+                                                    </DataTrigger>
+                                                </Style.Triggers>
+                                            </Style>
+                                        </TextBlock.Style>
+                                    </TextBlock>
+
+                                    <StackPanel Orientation="Horizontal"
+                                                HorizontalAlignment="Center">
+                                        <StackPanel.Style>
+                                            <Style TargetType="StackPanel">
+                                                <Setter Property="Visibility" Value="Visible" />
+                                                <Style.Triggers>
+                                                    <DataTrigger Binding="{Binding FileName}" Value="Перетащите запись сюда">
+                                                        <Setter Property="Visibility" Value="Collapsed" />
+                                                    </DataTrigger>
+                                                </Style.Triggers>
+                                            </Style>
+                                        </StackPanel.Style>
+                                        <Border Background="{DynamicResource SelectedBrush}"
+                                                CornerRadius="6"
+                                                Padding="7,2"
+                                                Margin="0,0,8,0">
+                                            <TextBlock Text="{Binding FileBadge}"
+                                                       FontSize="10"
+                                                       FontWeight="SemiBold"
+                                                       Foreground="{DynamicResource ForestBrush}" />
+                                        </Border>
+                                        <TextBlock Text="{Binding FileDetails}"
+                                                   Style="{StaticResource Muted}"
+                                                   VerticalAlignment="Center" />
+                                    </StackPanel>
+                                </Grid>
+
+                                <Button Content="{Binding FileButtonText}"
+                                        Margin="0,10,0,0"
+                                        Padding="20,8"
+                                        MinWidth="132"
+                                        HorizontalAlignment="Center"
+                                        IsEnabled="{Binding InputsEnabled}"
+                                        Click="ChooseFile_Click" />
                             </StackPanel>
                         </Grid>
                     </Border>
@@ -209,8 +245,6 @@
                                                    FontWeight="SemiBold" Foreground="{DynamicResource ForestBrush}" />
                                     </StackPanel>
                                     <TextBlock Text="Small · около 488 МБ" Margin="0,6,0,0" Style="{StaticResource Muted}" />
-                                    <TextBlock Text="{Binding SmallStatus}" Margin="0,4,0,0" FontSize="10"
-                                               Foreground="{DynamicResource MutedTextBrush}" TextWrapping="Wrap" />
                                 </StackPanel>
                             </RadioButton>
                             <RadioButton GroupName="Model" Style="{StaticResource ChoiceCard}"
@@ -218,8 +252,6 @@
                                 <StackPanel>
                                     <TextBlock Text="Точнее" FontWeight="SemiBold" FontSize="14" />
                                     <TextBlock Text="Medium · около 1,5 ГБ" Margin="0,6,0,0" Style="{StaticResource Muted}" />
-                                    <TextBlock Text="{Binding MediumStatus}" Margin="0,4,0,0" FontSize="10"
-                                               Foreground="{DynamicResource MutedTextBrush}" TextWrapping="Wrap" />
                                 </StackPanel>
                             </RadioButton>
                             </UniformGrid>
@@ -238,7 +270,8 @@
                                 <TextBlock Text="&#xE8B7;" FontFamily="Segoe MDL2 Assets" FontSize="21"
                                            Foreground="{DynamicResource MustardBrush}" VerticalAlignment="Center" />
                                 <TextBlock Grid.Column="1" Margin="11,0" VerticalAlignment="Center"
-                                           TextTrimming="CharacterEllipsis" ToolTip="{Binding OutputDirectory}">
+                                           TextTrimming="CharacterEllipsis" ToolTip="{Binding OutputDirectory}"
+                                           Foreground="{DynamicResource TextBrush}">
                                     <TextBlock.Style>
                                         <Style TargetType="TextBlock">
                                             <Setter Property="Text" Value="{Binding OutputDirectory}" />

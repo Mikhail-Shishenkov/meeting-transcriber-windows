@@ -12,6 +12,7 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <Resource Include="Assets\Megatranscriber-AppIcon.png" />
     <ProjectReference Include="..\PolinMegatranscriber.Core\PolinMegatranscriber.Core.csproj" />
     <None Include="$(NativeBridgePath)"
           Link="pmtwhisper.dll"
