@@ -21,6 +21,12 @@ public partial class MainWindow : Window
             new FFprobeMediaInspector(locator),
             new ProcessingService(locator));
         DataContext = viewModel;
+        LanguageSelector.SelectedIndex = AppSettingsStore.Current.UiLanguage switch
+        {
+            UiLanguage.Russian => 0,
+            UiLanguage.Italian => 2,
+            _ => 1,
+        };
     }
 
     private async void Window_Loaded(object sender, RoutedEventArgs e) =>
@@ -33,8 +39,8 @@ public partial class MainWindow : Window
     {
         var dialog = new OpenFileDialog
         {
-            Title = "Выберите запись",
-            Filter = "Медиафайлы|*.webm;*.mp4;*.mov;*.mp3;*.m4a;*.wav|Все файлы|*.*",
+            Title = LocalizationManager.Get("OpenFileTitle"),
+            Filter = $"{LocalizationManager.Get("MediaFiles")}|*.webm;*.mp4;*.mov;*.mp3;*.m4a;*.wav|{LocalizationManager.Get("AllFiles")}|*.*",
             CheckFileExists = true,
             Multiselect = false,
         };
@@ -48,7 +54,7 @@ public partial class MainWindow : Window
     {
         var dialog = new OpenFolderDialog
         {
-            Title = "Куда сохранить результаты?",
+            Title = LocalizationManager.Get("OpenFolderTitle"),
             InitialDirectory = Directory.Exists(viewModel.OutputDirectory)
                 ? viewModel.OutputDirectory
                 : null,
@@ -99,6 +105,21 @@ public partial class MainWindow : Window
         }
 
         ThemeManager.Apply(appearance);
+    }
+
+    private void Language_SelectionChanged(
+        object sender,
+        SelectionChangedEventArgs e)
+    {
+        if (sender is not ComboBox { SelectedItem: ComboBoxItem item }
+            || item.Tag is not string tag
+            || !Enum.TryParse(tag, out UiLanguage language))
+        {
+            return;
+        }
+
+        AppSettingsStore.Current.SetUiLanguage(language);
+        LocalizationManager.Apply(language);
     }
 
     private void RevealResult_Click(object sender, RoutedEventArgs e)

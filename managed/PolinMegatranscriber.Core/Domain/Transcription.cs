@@ -6,6 +6,8 @@ public enum TranscriptionLanguage
 {
     Automatic = 0,
     Russian = 1,
+    English = 2,
+    Italian = 3,
 }
 
 public sealed record TranscriptionRequest(

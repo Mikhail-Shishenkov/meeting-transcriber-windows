@@ -24,8 +24,18 @@ internal static class ThemeManager
         };
 
         var dictionaries = Application.Current.Resources.MergedDictionaries;
-        dictionaries.Clear();
-        dictionaries.Add(dictionary);
+        ResourceDictionary? current = dictionaries.FirstOrDefault(
+            item => item.Source?.OriginalString.StartsWith(
+                "Themes/",
+                StringComparison.OrdinalIgnoreCase) == true);
+        if (current is null)
+        {
+            dictionaries.Insert(0, dictionary);
+            return;
+        }
+
+        int index = dictionaries.IndexOf(current);
+        dictionaries[index] = dictionary;
     }
 
     private static bool SystemUsesDarkTheme()

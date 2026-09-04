@@ -111,6 +111,8 @@ internal static class TranscriptionLanguageExtensions
         {
             TranscriptionLanguage.Automatic => "auto",
             TranscriptionLanguage.Russian => "ru",
+            TranscriptionLanguage.English => "en",
+            TranscriptionLanguage.Italian => "it",
             _ => throw new ArgumentOutOfRangeException(nameof(language)),
         };
 }

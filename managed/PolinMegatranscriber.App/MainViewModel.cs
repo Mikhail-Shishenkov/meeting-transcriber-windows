@@ -6,17 +6,7 @@ using System.Runtime.CompilerServices;
 
 namespace PolinMegatranscriber.App;
 
-internal enum UiRunState
-{
-    Idle,
-    Preparing,
-    DownloadingModel,
-    Processing,
-    Cancelling,
-    Cancelled,
-    Success,
-    Failure,
-}
+internal enum UiRunState { Idle, Preparing, DownloadingModel, Processing, Cancelling, Cancelled, Success, Failure }
 
 internal sealed class MainViewModel : INotifyPropertyChanged
 {
@@ -26,188 +16,94 @@ internal sealed class MainViewModel : INotifyPropertyChanged
     private CancellationTokenSource? operationCancellation;
     private CancellationTokenSource? inspectionCancellation;
     private string? inputPath;
-    private string outputDirectory = "Выберите файл";
+    private string outputDirectory = "";
     private ProcessingMode? selectedMode;
     private WhisperModel selectedModel = WhisperModel.Small;
+    private TranscriptionLanguage transcriptionLanguage;
     private UiRunState state;
     private bool isInspecting;
     private double progressFraction;
-    private string stageText = "";
-    private string statusMessage = "";
-    private string smallStatus = "Проверяем…";
-    private string mediumStatus = "Проверяем…";
+    private string stageKey = "StageCheckingFile";
+    private string statusKey = "";
+    private string smallStatusKey = "ModelChecking";
+    private string mediumStatusKey = "ModelChecking";
     private ProcessingResult? result;
     private bool textCopied;
 
-    internal MainViewModel(
-        IModelManager modelManager,
-        IMediaInspector mediaInspector,
-        IProcessingService processingService)
+    internal MainViewModel(IModelManager modelManager, IMediaInspector mediaInspector, IProcessingService processingService)
     {
         this.modelManager = modelManager;
         this.mediaInspector = mediaInspector;
         this.processingService = processingService;
+        transcriptionLanguage = AppSettingsStore.Current.TranscriptionLanguage;
+        LocalizationManager.LanguageChanged += OnLanguageChanged;
     }
 
     public event PropertyChangedEventHandler? PropertyChanged;
-
     internal ObservableCollection<string> OutputFileNames { get; } = [];
-
     internal IReadOnlyList<string> OutputFiles => result?.OutputFiles ?? [];
+    internal string? TextOutputPath => result?.OutputFiles.FirstOrDefault(path =>
+        string.Equals(Path.GetExtension(path), ".txt", StringComparison.OrdinalIgnoreCase));
 
-    internal string? TextOutputPath => result?.OutputFiles.FirstOrDefault(
-        path => string.Equals(
-            Path.GetExtension(path),
-            ".txt",
-            StringComparison.OrdinalIgnoreCase));
-
-    public string FileName => inputPath is null
-        ? "Перетащите запись сюда"
-        : Path.GetFileName(inputPath);
-
+    public bool HasInputFile => inputPath is not null;
+    public string FileName => inputPath is null ? L("DropTitle") : Path.GetFileName(inputPath);
     public string FileDetails
     {
         get
         {
-            if (isInspecting)
-            {
-                return "Проверяем файл…";
-            }
-
-            if (inputPath is null)
-            {
-                return "WEBM, MP4, MOV, MP3, M4A, WAV и другие форматы FFmpeg";
-            }
-
-            try
-            {
-                return FormatBytes(new FileInfo(inputPath).Length);
-            }
-            catch
-            {
-                return "Файл выбран";
-            }
+            if (isInspecting) return L("StageCheckingFileEllipsis");
+            if (inputPath is null) return L("FileFormats");
+            try { return FormatBytes(new FileInfo(inputPath).Length); }
+            catch { return L("FileSelected"); }
         }
     }
-
-    public string FileBadge => inputPath is null
-        ? "ЛОКАЛЬНО"
-        : Path.GetExtension(inputPath).TrimStart('.').ToUpperInvariant();
-
-    public string FileButtonText => inputPath is null
-        ? "Выбрать файл…"
-        : "Выбрать другой файл…";
-
-    public string OutputDirectory
-    {
-        get => outputDirectory;
-        private set => Set(ref outputDirectory, value);
-    }
-
+    public string FileBadge => inputPath is null ? "" : Path.GetExtension(inputPath).TrimStart('.').ToUpperInvariant();
+    public string FileButtonText => L(inputPath is null ? "ChooseFile" : "ChooseAnotherFile");
+    public string OutputDirectory { get => outputDirectory; private set => Set(ref outputDirectory, value); }
     public string SelectedModeTitle => selectedMode switch
     {
-        ProcessingMode.AudioOnly => "Только аудио · MP3",
-        ProcessingMode.TextOnly => "Только текст · TXT + SRT",
-        ProcessingMode.AudioAndText => "Аудио и текст · MP3 + TXT + SRT",
-        _ => "Режим не выбран",
+        ProcessingMode.AudioOnly => $"{L("ModeAudioOnly")} · MP3",
+        ProcessingMode.TextOnly => $"{L("ModeTextOnly")} · TXT + SRT",
+        ProcessingMode.AudioAndText => $"{L("ModeAudioText")} · MP3 + TXT + SRT",
+        _ => L("ModeNotSelected"),
     };
 
-    public bool IsAudioOnly
-    {
-        get => selectedMode == ProcessingMode.AudioOnly;
-        set { if (value) SelectMode(ProcessingMode.AudioOnly); }
-    }
-
-    public bool IsTextOnly
-    {
-        get => selectedMode == ProcessingMode.TextOnly;
-        set { if (value) SelectMode(ProcessingMode.TextOnly); }
-    }
-
-    public bool IsAudioAndText
-    {
-        get => selectedMode == ProcessingMode.AudioAndText;
-        set { if (value) SelectMode(ProcessingMode.AudioAndText); }
-    }
-
-    public bool IsSmall
-    {
-        get => selectedModel == WhisperModel.Small;
-        set { if (value) SelectModel(WhisperModel.Small); }
-    }
-
-    public bool IsMedium
-    {
-        get => selectedModel == WhisperModel.Medium;
-        set { if (value) SelectModel(WhisperModel.Medium); }
-    }
-
-    public bool ShowsModelSelection => selectedMode is
-        ProcessingMode.TextOnly or ProcessingMode.AudioAndText;
-
-    public string SmallStatus => smallStatus;
-
-    public string MediumStatus => mediumStatus;
-
-    public bool IsBusy => state is UiRunState.Preparing
-        or UiRunState.DownloadingModel
-        or UiRunState.Processing
-        or UiRunState.Cancelling;
-
+    public bool IsAudioOnly { get => selectedMode == ProcessingMode.AudioOnly; set { if (value) SelectMode(ProcessingMode.AudioOnly); } }
+    public bool IsTextOnly { get => selectedMode == ProcessingMode.TextOnly; set { if (value) SelectMode(ProcessingMode.TextOnly); } }
+    public bool IsAudioAndText { get => selectedMode == ProcessingMode.AudioAndText; set { if (value) SelectMode(ProcessingMode.AudioAndText); } }
+    public bool IsSmall { get => selectedModel == WhisperModel.Small; set { if (value) SelectModel(WhisperModel.Small); } }
+    public bool IsMedium { get => selectedModel == WhisperModel.Medium; set { if (value) SelectModel(WhisperModel.Medium); } }
+    public bool IsRecordingRussian { get => transcriptionLanguage == TranscriptionLanguage.Russian; set { if (value) SelectTranscriptionLanguage(TranscriptionLanguage.Russian); } }
+    public bool IsRecordingEnglish { get => transcriptionLanguage == TranscriptionLanguage.English; set { if (value) SelectTranscriptionLanguage(TranscriptionLanguage.English); } }
+    public bool IsRecordingItalian { get => transcriptionLanguage == TranscriptionLanguage.Italian; set { if (value) SelectTranscriptionLanguage(TranscriptionLanguage.Italian); } }
+    public bool ShowsModelSelection => selectedMode is ProcessingMode.TextOnly or ProcessingMode.AudioAndText;
+    public string SmallStatus => L(smallStatusKey);
+    public string MediumStatus => L(mediumStatusKey);
+    public bool IsBusy => state is UiRunState.Preparing or UiRunState.DownloadingModel or UiRunState.Processing or UiRunState.Cancelling;
     public bool InputsEnabled => !IsBusy;
-
     public bool IsCompact => IsBusy || state == UiRunState.Success;
-
     public bool ShowProgress => IsBusy;
-
     public bool ShowCancelled => state == UiRunState.Cancelled;
-
     public bool ShowFailure => state == UiRunState.Failure;
-
     public bool ShowSuccess => state == UiRunState.Success;
-
     public bool ShowStartButton => !IsBusy && state != UiRunState.Success;
-
     public bool ShowCancelButton => IsBusy;
-
-    public bool CanStart => inputPath is not null
-        && selectedMode is not null
-        && Directory.Exists(outputDirectory)
-        && !IsBusy
-        && !isInspecting;
-
+    public bool CanStart => inputPath is not null && selectedMode is not null && Directory.Exists(outputDirectory) && !IsBusy && !isInspecting;
     public bool IsInspecting => isInspecting;
-
     public double ProgressPercent => progressFraction * 100.0;
-
     public string ProgressText => $"{Math.Round(ProgressPercent):0}%";
-
-    public string StageText => stageText;
-
-    public string CancelButtonText => state == UiRunState.Cancelling
-        ? "Отменяем…"
-        : "Отменить";
-
-    public string StatusMessage => statusMessage;
-
+    public string StageText => L(stageKey);
+    public string CancelButtonText => L(state == UiRunState.Cancelling ? "StageCancelling" : "Cancel");
+    public string StatusMessage => string.IsNullOrEmpty(statusKey) ? "" : L(statusKey);
     public bool HasTextOutput => TextOutputPath is not null;
+    public string CopyTextLabel => L(textCopied ? "TextCopied" : "CopyText");
 
-    public string CopyTextLabel => textCopied ? "Текст скопирован" : "Скопировать текст";
-
-    internal async Task InitializeAsync()
-    {
-        await Task.WhenAll(
-            RefreshModelStatusAsync(WhisperModel.Small),
-            RefreshModelStatusAsync(WhisperModel.Medium));
-    }
+    internal async Task InitializeAsync() => await Task.WhenAll(
+        RefreshModelStatusAsync(WhisperModel.Small), RefreshModelStatusAsync(WhisperModel.Medium));
 
     internal async Task SelectInputAsync(string path)
     {
-        if (IsBusy || string.IsNullOrWhiteSpace(path))
-        {
-            return;
-        }
-
+        if (IsBusy || string.IsNullOrWhiteSpace(path)) return;
         inspectionCancellation?.Cancel();
         inspectionCancellation?.Dispose();
         inspectionCancellation = new CancellationTokenSource();
@@ -216,60 +112,44 @@ internal sealed class MainViewModel : INotifyPropertyChanged
         result = null;
         OutputFileNames.Clear();
         state = UiRunState.Idle;
-        statusMessage = "";
+        statusKey = "";
         isInspecting = true;
-        RaiseState();
-        RaiseFile();
-
+        RaiseState(); RaiseFile();
         try
         {
             RequireReadableOrdinaryFile(inputPath);
             _ = await mediaInspector.InspectAsync(inputPath, token);
-            OutputDirectory = Path.GetDirectoryName(inputPath)
-                ?? throw new IOException();
+            OutputDirectory = Path.GetDirectoryName(inputPath) ?? throw new IOException();
         }
-        catch (OperationCanceledException) when (token.IsCancellationRequested)
-        {
-            return;
-        }
+        catch (OperationCanceledException) when (token.IsCancellationRequested) { return; }
         catch (Exception exception)
         {
             inputPath = null;
             state = UiRunState.Failure;
-            statusMessage = SafeMessage(
-                exception,
-                "Не удалось проверить выбранный медиафайл.");
+            statusKey = ErrorKey(exception, "ErrorInspect");
         }
         finally
         {
             isInspecting = false;
-            RaiseState();
-            RaiseFile();
+            RaiseState(); RaiseFile();
         }
     }
 
     internal void SetOutputDirectory(string path)
     {
-        if (IsBusy || !Directory.Exists(path))
-        {
-            return;
-        }
-
+        if (IsBusy || !Directory.Exists(path)) return;
         OutputDirectory = Path.GetFullPath(path);
         OnPropertyChanged(nameof(CanStart));
     }
 
     internal async Task StartAsync()
     {
-        if (!CanStart || inputPath is null || selectedMode is null)
-        {
-            return;
-        }
-
+        if (!CanStart || inputPath is null || selectedMode is null) return;
         operationCancellation?.Dispose();
         operationCancellation = new CancellationTokenSource();
         CancellationToken token = operationCancellation.Token;
         ProcessingMode mode = selectedMode.Value;
+        TranscriptionLanguage operationLanguage = transcriptionLanguage;
         string input = inputPath;
         string destination = outputDirectory;
         string? modelPath = null;
@@ -277,306 +157,205 @@ internal sealed class MainViewModel : INotifyPropertyChanged
         result = null;
         OutputFileNames.Clear();
         progressFraction = 0.0;
-        stageText = "Проверяем файл";
-        statusMessage = "";
+        stageKey = "StageCheckingFile";
+        statusKey = "";
         state = UiRunState.Preparing;
         RaiseState();
-
         try
         {
             if (mode is ProcessingMode.TextOnly or ProcessingMode.AudioAndText)
             {
-                stageText = "Проверяем модель";
-                RaiseProgress();
-                ModelInstallationStatus modelStatus =
-                    await modelManager.GetStatusAsync(selectedModel, token);
+                stageKey = "StageCheckingModel"; RaiseProgress();
+                ModelInstallationStatus modelStatus = await modelManager.GetStatusAsync(selectedModel, token);
                 if (modelStatus != ModelInstallationStatus.Verified)
                 {
                     state = UiRunState.DownloadingModel;
-                    stageText = "Загружаем модель — это потребуется только один раз";
+                    stageKey = "StageDownloadingModel";
                     processingBase = 0.15;
                     RaiseState();
                     var modelProgress = new Progress<ModelDownloadProgress>(value =>
                     {
-                        progressFraction = Math.Max(
-                            progressFraction,
-                            Math.Clamp(value.Fraction, 0.0, 1.0) * 0.15);
+                        progressFraction = Math.Max(progressFraction, Math.Clamp(value.Fraction, 0.0, 1.0) * 0.15);
                         RaiseProgress();
                     });
-                    modelPath = await modelManager.DownloadAndInstallAsync(
-                        selectedModel,
-                        modelProgress,
-                        token);
-                    SetModelStatus(selectedModel, "Установлена");
+                    modelPath = await modelManager.DownloadAndInstallAsync(selectedModel, modelProgress, token);
+                    SetModelStatus(selectedModel, "ModelInstalled");
                 }
                 else
                 {
-                    modelPath = await modelManager.GetVerifiedPathAsync(
-                        selectedModel,
-                        token);
+                    modelPath = await modelManager.GetVerifiedPathAsync(selectedModel, token);
                 }
-
-                if (modelPath is null)
-                {
-                    throw new InvalidOperationException(
-                        "Модель распознавания недоступна или повреждена.");
-                }
+                if (modelPath is null) throw new InvalidOperationException();
             }
 
-            state = UiRunState.Processing;
-            RaiseState();
+            state = UiRunState.Processing; RaiseState();
             double progressBase = processingBase;
             var processingProgress = new Progress<ProcessingProgress>(value =>
             {
-                progressFraction = Math.Max(
-                    progressFraction,
-                    progressBase + (1.0 - progressBase)
-                    * Math.Clamp(value.Fraction, 0.0, 1.0));
-                stageText = StageFor(value.Phase);
+                progressFraction = Math.Max(progressFraction,
+                    progressBase + (1.0 - progressBase) * Math.Clamp(value.Fraction, 0.0, 1.0));
+                stageKey = StageKeyFor(value.Phase);
                 RaiseProgress();
             });
             result = await processingService.ProcessAsync(
-                new ProcessingRequest(
-                    input,
-                    mode,
-                    destination,
-                    modelPath,
-                    TranscriptionLanguage.Russian),
-                processingProgress,
-                token);
-
+                new ProcessingRequest(input, mode, destination, modelPath, operationLanguage),
+                processingProgress, token);
             progressFraction = 1.0;
-            stageText = "Сохраняем результаты";
-            foreach (string output in result.OutputFiles)
-            {
-                OutputFileNames.Add(Path.GetFileName(output));
-            }
+            stageKey = "StageSaving";
+            foreach (string output in result.OutputFiles) OutputFileNames.Add(Path.GetFileName(output));
             state = UiRunState.Success;
         }
         catch (OperationCanceledException) when (token.IsCancellationRequested)
         {
-            state = UiRunState.Cancelled;
-            statusMessage = "Можно изменить параметры или запустить обработку снова.";
+            state = UiRunState.Cancelled; statusKey = "CancelledMessage";
         }
         catch (Exception exception)
         {
-            state = UiRunState.Failure;
-            statusMessage = SafeMessage(
-                exception,
-                "Не удалось выполнить локальную обработку.");
+            state = UiRunState.Failure; statusKey = ErrorKey(exception, "ErrorProcessing");
         }
         finally
         {
-            operationCancellation?.Dispose();
-            operationCancellation = null;
-            RaiseState();
-            RaiseProgress();
+            operationCancellation?.Dispose(); operationCancellation = null;
+            RaiseState(); RaiseProgress();
         }
     }
 
     internal void Cancel()
     {
-        if (!IsBusy || operationCancellation is null)
-        {
-            return;
-        }
-
-        state = UiRunState.Cancelling;
-        stageText = "Отменяем…";
-        RaiseState();
-        operationCancellation.Cancel();
+        if (!IsBusy || operationCancellation is null) return;
+        state = UiRunState.Cancelling; stageKey = "StageCancelling";
+        RaiseState(); operationCancellation.Cancel();
     }
 
     internal void ResetForAnotherFile()
     {
-        if (IsBusy)
-        {
-            return;
-        }
-
-        result = null;
-        OutputFileNames.Clear();
-        state = UiRunState.Idle;
-        progressFraction = 0;
-        statusMessage = "";
-        RaiseState();
+        if (IsBusy) return;
+        result = null; OutputFileNames.Clear(); state = UiRunState.Idle;
+        progressFraction = 0; statusKey = ""; RaiseState();
     }
 
     internal async Task MarkTextCopiedAsync()
     {
-        textCopied = true;
-        OnPropertyChanged(nameof(CopyTextLabel));
+        textCopied = true; OnPropertyChanged(nameof(CopyTextLabel));
         await Task.Delay(TimeSpan.FromSeconds(2));
-        textCopied = false;
-        OnPropertyChanged(nameof(CopyTextLabel));
+        textCopied = false; OnPropertyChanged(nameof(CopyTextLabel));
     }
 
     private void SelectMode(ProcessingMode mode)
     {
-        if (IsBusy)
-        {
-            return;
-        }
-
+        if (IsBusy) return;
         selectedMode = mode;
-        OnPropertyChanged(nameof(IsAudioOnly));
-        OnPropertyChanged(nameof(IsTextOnly));
-        OnPropertyChanged(nameof(IsAudioAndText));
-        OnPropertyChanged(nameof(ShowsModelSelection));
-        OnPropertyChanged(nameof(SelectedModeTitle));
-        OnPropertyChanged(nameof(CanStart));
+        OnPropertyChanged(nameof(IsAudioOnly)); OnPropertyChanged(nameof(IsTextOnly));
+        OnPropertyChanged(nameof(IsAudioAndText)); OnPropertyChanged(nameof(ShowsModelSelection));
+        OnPropertyChanged(nameof(SelectedModeTitle)); OnPropertyChanged(nameof(CanStart));
     }
 
     private void SelectModel(WhisperModel model)
     {
-        if (IsBusy)
-        {
-            return;
-        }
+        if (IsBusy) return;
+        selectedModel = model; OnPropertyChanged(nameof(IsSmall)); OnPropertyChanged(nameof(IsMedium));
+    }
 
-        selectedModel = model;
-        OnPropertyChanged(nameof(IsSmall));
-        OnPropertyChanged(nameof(IsMedium));
+    private void SelectTranscriptionLanguage(TranscriptionLanguage language)
+    {
+        if (IsBusy) return;
+        transcriptionLanguage = language;
+        AppSettingsStore.Current.SetTranscriptionLanguage(language);
+        OnPropertyChanged(nameof(IsRecordingRussian)); OnPropertyChanged(nameof(IsRecordingEnglish));
+        OnPropertyChanged(nameof(IsRecordingItalian));
     }
 
     private async Task RefreshModelStatusAsync(WhisperModel model)
     {
-        string text;
+        string key;
         try
         {
-            ModelInstallationStatus status = await modelManager.GetStatusAsync(model);
-            text = status switch
+            key = await modelManager.GetStatusAsync(model) switch
             {
-                ModelInstallationStatus.Verified => "Установлена",
-                ModelInstallationStatus.Corrupted => "Повреждена · загрузим заново",
-                _ => "Требуется загрузка",
+                ModelInstallationStatus.Verified => "ModelInstalled",
+                ModelInstallationStatus.Corrupted => "ModelCorrupted",
+                _ => "ModelDownloadRequired",
             };
         }
-        catch
-        {
-            text = "Статус недоступен";
-        }
-
-        SetModelStatus(model, text);
+        catch { key = "ModelStatusUnavailable"; }
+        SetModelStatus(model, key);
     }
 
-    private void SetModelStatus(WhisperModel model, string text)
+    private void SetModelStatus(WhisperModel model, string key)
     {
-        if (model == WhisperModel.Small)
-        {
-            smallStatus = text;
-            OnPropertyChanged(nameof(SmallStatus));
-        }
-        else
-        {
-            mediumStatus = text;
-            OnPropertyChanged(nameof(MediumStatus));
-        }
+        if (model == WhisperModel.Small) { smallStatusKey = key; OnPropertyChanged(nameof(SmallStatus)); }
+        else { mediumStatusKey = key; OnPropertyChanged(nameof(MediumStatus)); }
     }
 
     private static void RequireReadableOrdinaryFile(string path)
     {
         FileAttributes attributes = File.GetAttributes(path);
-        if ((attributes & FileAttributes.Directory) != 0)
-        {
-            throw new IOException();
-        }
-
-        using FileStream stream = new(
-            path,
-            FileMode.Open,
-            FileAccess.Read,
-            FileShare.Read);
+        if ((attributes & FileAttributes.Directory) != 0) throw new IOException();
+        using FileStream stream = new(path, FileMode.Open, FileAccess.Read, FileShare.Read);
     }
 
-    private static string StageFor(ProcessingPhase phase) => phase switch
+    private static string StageKeyFor(ProcessingPhase phase) => phase switch
     {
-        ProcessingPhase.Preflight => "Проверяем файл",
-        ProcessingPhase.MediaProcessing => "Извлекаем аудио",
-        ProcessingPhase.Transcription => "Распознаём речь",
-        _ => "Сохраняем результаты",
+        ProcessingPhase.Preflight => "StageCheckingFile",
+        ProcessingPhase.MediaProcessing => "StageExtractingAudio",
+        ProcessingPhase.Transcription => "StageTranscribing",
+        _ => "StageSaving",
     };
 
-    private static string SafeMessage(Exception exception, string fallback)
+    private static string ErrorKey(Exception exception, string fallback) => exception switch
     {
-        string message = exception.Message.Trim();
-        bool looksSafe = message.Length is > 0 and <= 300
-            && !message.Contains('\\')
-            && !message.Contains('/')
-            && !message.Contains('\r')
-            && !message.Contains('\n')
-            && !message.Contains("stderr", StringComparison.OrdinalIgnoreCase);
-        return looksSafe ? message : fallback;
-    }
+        MediaInspectionException { Error: MediaInspectionError.ToolUnavailable } => "ErrorMediaTools",
+        MediaInspectionException { Error: MediaInspectionError.NoAudioStream } => "ErrorNoAudio",
+        MediaInspectionException { Error: MediaInspectionError.InvalidOrUnsupportedMedia } => "ErrorInvalidMedia",
+        ProcessingException { Error: ProcessingError.NoAudioStream } => "ErrorNoAudio",
+        ProcessingException { Error: ProcessingError.OutputConflict } => "ErrorOutputConflict",
+        ProcessingException { Error: ProcessingError.ModelUnavailableOrInvalid } => "ErrorModel",
+        ModelManagerException { Error: ModelManagementError.NetworkFailure or ModelManagementError.HttpFailure or ModelManagementError.DownloadFailed } => "ErrorNetwork",
+        ModelManagerException or InvalidOperationException => "ErrorModel",
+        _ => fallback,
+    };
 
     private static string FormatBytes(long bytes)
     {
-        const double kibibyte = 1024.0;
-        const double mebibyte = kibibyte * 1024.0;
-        const double gibibyte = mebibyte * 1024.0;
+        const double kb = 1024.0, mb = kb * 1024.0, gb = mb * 1024.0;
+        if (bytes >= gb) return $"{bytes / gb:0.0} {L("UnitGB")}";
+        if (bytes >= mb) return $"{bytes / mb:0.0} {L("UnitMB")}";
+        if (bytes >= kb) return $"{bytes / kb:0.#} {L("UnitKB")}";
+        return $"{bytes} {L("UnitB")}";
+    }
 
-        if (bytes >= gibibyte)
-        {
-            return $"{bytes / gibibyte:0.0} ГБ";
-        }
-
-        if (bytes >= mebibyte)
-        {
-            return $"{bytes / mebibyte:0.0} МБ";
-        }
-
-        if (bytes >= kibibyte)
-        {
-            return $"{bytes / kibibyte:0.#} КБ";
-        }
-
-        return $"{bytes} Б";
+    private void OnLanguageChanged(object? sender, EventArgs e)
+    {
+        RaiseFile(); OnPropertyChanged(nameof(SelectedModeTitle));
+        OnPropertyChanged(nameof(SmallStatus)); OnPropertyChanged(nameof(MediumStatus));
+        OnPropertyChanged(nameof(StageText)); OnPropertyChanged(nameof(CancelButtonText));
+        OnPropertyChanged(nameof(StatusMessage)); OnPropertyChanged(nameof(CopyTextLabel));
     }
 
     private void RaiseFile()
     {
-        OnPropertyChanged(nameof(FileName));
-        OnPropertyChanged(nameof(FileDetails));
-        OnPropertyChanged(nameof(FileBadge));
-        OnPropertyChanged(nameof(FileButtonText));
-        OnPropertyChanged(nameof(IsInspecting));
+        OnPropertyChanged(nameof(HasInputFile)); OnPropertyChanged(nameof(FileName));
+        OnPropertyChanged(nameof(FileDetails)); OnPropertyChanged(nameof(FileBadge));
+        OnPropertyChanged(nameof(FileButtonText)); OnPropertyChanged(nameof(IsInspecting));
     }
-
     private void RaiseProgress()
     {
-        OnPropertyChanged(nameof(ProgressPercent));
-        OnPropertyChanged(nameof(ProgressText));
-        OnPropertyChanged(nameof(StageText));
+        OnPropertyChanged(nameof(ProgressPercent)); OnPropertyChanged(nameof(ProgressText)); OnPropertyChanged(nameof(StageText));
     }
-
     private void RaiseState()
     {
-        OnPropertyChanged(nameof(IsBusy));
-        OnPropertyChanged(nameof(InputsEnabled));
-        OnPropertyChanged(nameof(IsCompact));
-        OnPropertyChanged(nameof(ShowProgress));
-        OnPropertyChanged(nameof(ShowCancelled));
-        OnPropertyChanged(nameof(ShowFailure));
-        OnPropertyChanged(nameof(ShowSuccess));
-        OnPropertyChanged(nameof(ShowStartButton));
-        OnPropertyChanged(nameof(ShowCancelButton));
-        OnPropertyChanged(nameof(CanStart));
-        OnPropertyChanged(nameof(StatusMessage));
-        OnPropertyChanged(nameof(HasTextOutput));
+        OnPropertyChanged(nameof(IsBusy)); OnPropertyChanged(nameof(InputsEnabled)); OnPropertyChanged(nameof(IsCompact));
+        OnPropertyChanged(nameof(ShowProgress)); OnPropertyChanged(nameof(ShowCancelled)); OnPropertyChanged(nameof(ShowFailure));
+        OnPropertyChanged(nameof(ShowSuccess)); OnPropertyChanged(nameof(ShowStartButton)); OnPropertyChanged(nameof(ShowCancelButton));
+        OnPropertyChanged(nameof(CanStart)); OnPropertyChanged(nameof(StatusMessage)); OnPropertyChanged(nameof(HasTextOutput));
         OnPropertyChanged(nameof(CancelButtonText));
     }
-
     private void Set<T>(ref T field, T value, [CallerMemberName] string? name = null)
     {
-        if (EqualityComparer<T>.Default.Equals(field, value))
-        {
-            return;
-        }
-
-        field = value;
-        OnPropertyChanged(name);
+        if (EqualityComparer<T>.Default.Equals(field, value)) return;
+        field = value; OnPropertyChanged(name);
     }
-
     private void OnPropertyChanged([CallerMemberName] string? name = null) =>
         PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(name));
+    private static string L(string key) => LocalizationManager.Get(key);
 }

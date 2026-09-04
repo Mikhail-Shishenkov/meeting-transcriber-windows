@@ -1,0 +1,28 @@
+<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                    xmlns:sys="clr-namespace:System;assembly=System.Runtime">
+    <sys:String x:Key="AppTitle">Megatranscriber</sys:String>
+    <sys:String x:Key="BrandTitle">Megatranscriber</sys:String>
+    <sys:String x:Key="Subtitle">Drop a recording, choose the output, and start local processing.</sys:String>
+    <sys:String x:Key="ThemeSystem">System</sys:String><sys:String x:Key="ThemeLight">Light</sys:String><sys:String x:Key="ThemeDark">Dark</sys:String>
+    <sys:String x:Key="LanguageRussian">Русский</sys:String><sys:String x:Key="LanguageEnglish">English</sys:String><sys:String x:Key="LanguageItalian">Italiano</sys:String>
+    <sys:String x:Key="DropTitle">Video or audio</sys:String><sys:String x:Key="FileFormats">WEBM, MP4, MOV, MP3, M4A, WAV and more</sys:String>
+    <sys:String x:Key="ChooseFile">Choose file…</sys:String><sys:String x:Key="ChooseAnotherFile">Choose another file…</sys:String>
+    <sys:String x:Key="FileSelected">File selected</sys:String><sys:String x:Key="SectionMode">What should be prepared?</sys:String>
+    <sys:String x:Key="ModeAudioOnly">Audio only</sys:String><sys:String x:Key="ModeTextOnly">Text only</sys:String><sys:String x:Key="ModeAudioText">Audio and text</sys:String><sys:String x:Key="ModeNotSelected">Mode not selected</sys:String>
+    <sys:String x:Key="SectionModel">Recognition model</sys:String><sys:String x:Key="Faster">Faster</sys:String><sys:String x:Key="Recommended">Recommended</sys:String><sys:String x:Key="MoreAccurate">More accurate</sys:String>
+    <sys:String x:Key="ModelSmallDetail">Small · about 488 MB</sys:String><sys:String x:Key="ModelMediumDetail">Medium · about 1.5 GB</sys:String>
+    <sys:String x:Key="SectionRecordingLanguage">Recording language</sys:String>
+    <sys:String x:Key="SectionOutput">Where should the results be saved?</sys:String><sys:String x:Key="NextToSource">Next to the source file</sys:String><sys:String x:Key="Change">Change…</sys:String>
+    <sys:String x:Key="StartProcessing">✦  Start processing</sys:String><sys:String x:Key="CurrentJob">Current job</sys:String>
+    <sys:String x:Key="StageCheckingFile">Checking file</sys:String><sys:String x:Key="StageCheckingFileEllipsis">Checking file…</sys:String><sys:String x:Key="StageCheckingModel">Checking model</sys:String>
+    <sys:String x:Key="StageDownloadingModel">Downloading model — required only once</sys:String><sys:String x:Key="StageExtractingAudio">Extracting audio</sys:String><sys:String x:Key="StageTranscribing">Transcribing speech</sys:String><sys:String x:Key="StageSaving">Saving results</sys:String><sys:String x:Key="StageCancelling">Cancelling…</sys:String>
+    <sys:String x:Key="Cancel">Cancel</sys:String><sys:String x:Key="CancelledTitle">Processing cancelled</sys:String><sys:String x:Key="CancelledMessage">You can change the settings or start processing again.</sys:String>
+    <sys:String x:Key="FailureTitle">Processing could not be completed</sys:String><sys:String x:Key="Done">Done</sys:String>
+    <sys:String x:Key="RevealResult">Show in File Explorer</sys:String><sys:String x:Key="OpenResultsFolder">Open results folder</sys:String><sys:String x:Key="OpenText">Open text</sys:String><sys:String x:Key="CopyText">Copy text</sys:String><sys:String x:Key="TextCopied">Text copied</sys:String><sys:String x:Key="ProcessAnother">✦  Process another video</sys:String>
+    <sys:String x:Key="Privacy">The recording stays on this computer.</sys:String>
+    <sys:String x:Key="OpenFileTitle">Choose a recording</sys:String><sys:String x:Key="MediaFiles">Media files</sys:String><sys:String x:Key="AllFiles">All files</sys:String><sys:String x:Key="OpenFolderTitle">Where should the results be saved?</sys:String>
+    <sys:String x:Key="ModelChecking">Checking…</sys:String><sys:String x:Key="ModelInstalled">Installed</sys:String><sys:String x:Key="ModelCorrupted">Corrupted · will download again</sys:String><sys:String x:Key="ModelDownloadRequired">Download required</sys:String><sys:String x:Key="ModelStatusUnavailable">Status unavailable</sys:String>
+    <sys:String x:Key="ErrorInspect">The selected media file could not be checked.</sys:String><sys:String x:Key="ErrorProcessing">Local processing could not be completed.</sys:String><sys:String x:Key="ErrorModel">The recognition model is unavailable or corrupted.</sys:String><sys:String x:Key="ErrorMediaTools">FFmpeg components are unavailable.</sys:String><sys:String x:Key="ErrorInvalidMedia">The file is corrupted or unsupported.</sys:String><sys:String x:Key="ErrorNoAudio">The selected file has no audio track.</sys:String><sys:String x:Key="ErrorOutputConflict">One of the output files already exists.</sys:String><sys:String x:Key="ErrorNetwork">The model could not be downloaded. Check your internet connection.</sys:String>
+    <sys:String x:Key="UnitB">B</sys:String><sys:String x:Key="UnitKB">KB</sys:String><sys:String x:Key="UnitMB">MB</sys:String><sys:String x:Key="UnitGB">GB</sys:String>
+</ResourceDictionary>

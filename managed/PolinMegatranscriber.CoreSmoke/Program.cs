@@ -56,6 +56,16 @@ internal static partial class CoreSmoke
 
     private static async Task VerifyMappingProgressAndRussianLanguageAsync()
     {
+        Assert(
+            TranscriptionLanguage.Russian.ToBridgeCode() == "ru",
+            "Russian bridge code must be ru.");
+        Assert(
+            TranscriptionLanguage.English.ToBridgeCode() == "en",
+            "English bridge code must be en.");
+        Assert(
+            TranscriptionLanguage.Italian.ToBridgeCode() == "it",
+            "Italian bridge code must be it.");
+
         using var inputs = TestInputs.Create();
         WhisperRuntimeSegment[] runtimeSegments =
         [
