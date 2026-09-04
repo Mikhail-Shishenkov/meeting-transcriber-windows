@@ -1,5 +1,10 @@
 using PolinMegatranscriber.Core;
 
+if (args.FirstOrDefault() == "--process-fixture")
+{
+    return await ProcessFixture.RunAsync(args.Skip(1).ToArray());
+}
+
 try
 {
     await CoreSmoke.RunAsync(args);
@@ -12,7 +17,7 @@ catch (Exception exception)
     return 1;
 }
 
-internal static class CoreSmoke
+internal static partial class CoreSmoke
 {
     internal static async Task RunAsync(string[] arguments)
     {
@@ -21,10 +26,20 @@ internal static class CoreSmoke
         await VerifyConcurrencyCancellationAndReuseAsync();
         await VerifyRuntimeErrorMappingAsync();
         await VerifyProgressFailureIsolationAsync();
+        VerifyFFmpegProgressParser();
+        await VerifyProcessRunnerContractAsync();
+        await VerifyMediaServiceContractsAsync();
 
         if (arguments.Length > 0)
         {
-            await RunRealAsync(ParseRealArguments(arguments));
+            if (arguments[0] == "--media-smoke")
+            {
+                await RunRealMediaAsync(ParseMediaArguments(arguments));
+            }
+            else
+            {
+                await RunRealAsync(ParseRealArguments(arguments));
+            }
         }
     }
 
